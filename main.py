@@ -35,15 +35,11 @@ class Tetris(QMainWindow):
         change_window_size_action = QAction("Change Window Size", self)
         change_window_size_action.triggered.connect(self.changeWindowSize)
 
-        close_action = QAction("Close", self)
-        close_action.triggered.connect(self.close)
-
 
         toolbar = self.addToolBar("Options")
         toolbar.addAction(change_rows_columns_action)
         toolbar.addAction(change_window_size_action)
         toolbar.addAction(restart_action)
-        toolbar.addAction(close_action)
 
         self.show()
 
@@ -92,6 +88,7 @@ class Board(QFrame):
 
     def initBoard(self):
 
+        self.score = 0
         self.timer = QBasicTimer()
         self.isWaitingAfterLine = False
 
@@ -305,43 +302,35 @@ class Board(QFrame):
         if not self.isWaitingAfterLine:
             self.newPiece()
 
-
     def removeFullLines(self):
-
         numFullLines = 0
         rowsToRemove = []
 
         for i in range(Board.BoardHeight):
-
             n = 0
             for j in range(Board.BoardWidth):
                 if not self.shapeAt(j, i) == Tetrominoe.NoShape:
                     n = n + 1
-
             if n == 10:
                 rowsToRemove.append(i)
 
         rowsToRemove.reverse()
 
-
         for m in rowsToRemove:
-
-            for k in range(m, Board.BoardHeight):
+            for k in range(m, Board.BoardHeight - 1):
                 for l in range(Board.BoardWidth):
-                        self.setShapeAt(l, k, self.shapeAt(l, k + 1))
+                    self.setShapeAt(l, k, self.shapeAt(l, k + 1))
 
         numFullLines = numFullLines + len(rowsToRemove)
+        self.score += numFullLines * 100  # Добавляем очки в зависимости от количества удаленных строк
 
         if numFullLines > 0:
-
             self.numLinesRemoved = self.numLinesRemoved + numFullLines
             self.msg2Statusbar.emit(str(self.numLinesRemoved))
-
+            self.msg2Statusbar.emit("Score: " + str(self.score))  # Отправляем обновленный счет в строку состояния
             self.isWaitingAfterLine = True
             self.curPiece.setShape(Tetrominoe.NoShape)
             self.update()
-
-
 
     def tryMove(self, newPiece, newX, newY):
 
